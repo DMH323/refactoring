@@ -45,17 +45,9 @@ public class StatementPrinter {
 
         for (Performance performance : invoice.getPerformances()) {
             Play play = plays.get(performance.playID);
-            int thisAmount = calculateAmount(play, performance);
+            int thisAmount = getAmount(performance);
 
-            // add volume credits
-            volumeCredits += Math.max(
-                    performance.audience - Constants.BASE_VOLUME_CREDIT_THRESHOLD, 0);
-
-            // add extra credit for every five comedy attendees
-            if ("comedy".equals(play.type)) {
-                volumeCredits += performance.audience
-                        / Constants.COMEDY_EXTRA_VOLUME_FACTOR;
-            }
+            volumeCredits = getVolumeCredits(performance, volumeCredits, play);
 
             // print line for this order
             result.append(
@@ -79,10 +71,26 @@ public class StatementPrinter {
         return result.toString();
     }
 
-    private int calculateAmount(Play play, Performance performance) {
-        int amount;
 
-        switch (play.type) {
+    /**
+     * Helper to retrieve the play object for a performance.
+     */
+    private Play getPlay(Performance performance) {
+        return plays.get(performance.playID);
+    }
+
+    /**
+     * Helper to retrieve a play’s type.
+     */
+    private String getPlayType(Performance performance) {
+        return getPlay(performance).type;
+    }
+
+    private int getAmount(Performance performance) {
+        int amount;
+        String type = getPlayType(performance);
+
+        switch (type) {
             case "tragedy":
                 amount = TRAGEDY_BASE_AMOUNT;
                 if (performance.audience > TRAGEDY_BASE_AUDIENCE) {
@@ -105,7 +113,7 @@ public class StatementPrinter {
 
             default:
                 throw new RuntimeException(
-                        String.format("unknown type: %s", play.type));
+                        String.format("unknown type: %s", type));
         }
 
         return amount;
