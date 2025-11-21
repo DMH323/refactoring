@@ -16,23 +16,11 @@ public class StatementPrinter {
     public final Invoice invoice;
     public final Map<String, Play> plays;
 
-    /**
-     * Constructs a StatementPrinter for the given invoice and plays.
-     *
-     * @param invoice the invoice containing performances
-     * @param plays   the map of play IDs to Play objects
-     */
     public StatementPrinter(Invoice invoice, Map<String, Play> plays) {
         this.invoice = invoice;
         this.plays = plays;
     }
 
-    /**
-     * Returns a formatted statement of the invoice associated with this printer.
-     *
-     * @return the formatted statement
-     * @throws RuntimeException if one of the play types is not known
-     */
     public String statement() {
         int totalAmount = 0;
         int volumeCredits = 0;
@@ -41,28 +29,24 @@ public class StatementPrinter {
                 new StringBuilder("Statement for " + invoice.getCustomer()
                         + System.lineSeparator());
 
-        NumberFormat formatter = NumberFormat.getCurrencyInstance(Locale.US);
-
         for (Performance performance : invoice.getPerformances()) {
-            Play play = plays.get(performance.playID);
-            int thisAmount = getAmount(performance);
+            int thisAmountValue = getAmount(performance);
 
-            volumeCredits = getVolumeCredits(performance, volumeCredits, play);
+            volumeCredits += getVolumeCredits(performance);
 
-            // print line for this order
             result.append(
                     String.format("  %s: %s (%s seats)%n",
-                            play.name,
-                            formatter.format(thisAmount / 100),
+                            getPlay(performance).name,
+                            usd(thisAmountValue),
                             performance.audience)
             );
 
-            totalAmount += thisAmount;
+            totalAmount += thisAmountValue;
         }
 
         result.append(
                 String.format("Amount owed is %s%n",
-                        formatter.format(totalAmount / 100))
+                        usd(totalAmount))
         );
         result.append(
                 String.format("You earned %s credits%n", volumeCredits)
@@ -71,55 +55,45 @@ public class StatementPrinter {
         return result.toString();
     }
 
-    private static int getVolumeCredits(Performance performance, int volumeCredits, Play play) {
-        // add volume credits
-        volumeCredits += Math.max(
-                performance.audience - Constants.BASE_VOLUME_CREDIT_THRESHOLD, 0);
-
-        // add extra credit for every five comedy attendees
-        if ("comedy".equals(play.type)) {
-            volumeCredits += performance.audience
-                    / Constants.COMEDY_EXTRA_VOLUME_FACTOR;
+    private int getVolumeCredits(Performance performance) {
+        int result = 0;
+        result += Math.max(performance.audience - Constants.BASE_VOLUME_CREDIT_THRESHOLD, 0);
+        if ("comedy".equals(getPlayType(performance))) {
+            result += performance.audience / Constants.COMEDY_EXTRA_VOLUME_FACTOR;
         }
-        return volumeCredits;
+        return result;
     }
 
-    /**
-     * Helper to retrieve the play object for a performance.
-     */
     private Play getPlay(Performance performance) {
         return plays.get(performance.playID);
     }
 
-    /**
-     * Helper to retrieve a play’s type.
-     */
     private String getPlayType(Performance performance) {
         return getPlay(performance).type;
     }
 
     private int getAmount(Performance performance) {
-        int amount;
+        int result;
         String type = getPlayType(performance);
 
         switch (type) {
             case "tragedy":
-                amount = TRAGEDY_BASE_AMOUNT;
+                result = TRAGEDY_BASE_AMOUNT;
                 if (performance.audience > TRAGEDY_BASE_AUDIENCE) {
-                    amount += TRAGEDY_EXTRA_RATE
+                    result += TRAGEDY_EXTRA_RATE
                             * (performance.audience - TRAGEDY_BASE_AUDIENCE);
                 }
                 break;
 
             case "comedy":
-                amount = Constants.COMEDY_BASE_AMOUNT;
+                result = Constants.COMEDY_BASE_AMOUNT;
                 if (performance.audience > Constants.COMEDY_AUDIENCE_THRESHOLD) {
-                    amount += Constants.COMEDY_OVER_BASE_CAPACITY_AMOUNT
+                    result += Constants.COMEDY_OVER_BASE_CAPACITY_AMOUNT
                             + Constants.COMEDY_OVER_BASE_CAPACITY_PER_PERSON
                             * (performance.audience
                             - Constants.COMEDY_AUDIENCE_THRESHOLD);
                 }
-                amount += Constants.COMEDY_AMOUNT_PER_AUDIENCE
+                result += Constants.COMEDY_AMOUNT_PER_AUDIENCE
                         * performance.audience;
                 break;
 
@@ -128,6 +102,17 @@ public class StatementPrinter {
                         String.format("unknown type: %s", type));
         }
 
-        return amount;
+        return result;
+    }
+
+    /**
+     * Format an amount in cents to US currency string (e.g., $123.45).
+     *
+     * @param amountInCents amount in cents
+     * @return string with US currency formatting
+     */
+    private String usd(int amountInCents) {
+        NumberFormat nf = NumberFormat.getCurrencyInstance(Locale.US);
+        return nf.format((double) amountInCents / Constants.PERCENT_FACTOR);
     }
 }
