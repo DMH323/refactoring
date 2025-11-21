@@ -22,26 +22,23 @@ public class StatementPrinter {
     }
 
     public String statement() {
-        int totalAmount = 0;
-        int volumeCredits = 0;
-
         StringBuilder result =
                 new StringBuilder("Statement for " + invoice.getCustomer()
                         + System.lineSeparator());
 
+        // compute totals first (split the loop)
+        int totalAmount = getTotalAmount();
+        int volumeCredits = getTotalVolumeCredits();
+
+        // build the result string (keep as the main loop — do not extract)
         for (Performance performance : invoice.getPerformances()) {
             int thisAmountValue = getAmount(performance);
-
-            volumeCredits += getVolumeCredits(performance);
-
             result.append(
                     String.format("  %s: %s (%s seats)%n",
                             getPlay(performance).name,
                             usd(thisAmountValue),
                             performance.audience)
             );
-
-            totalAmount += thisAmountValue;
         }
 
         result.append(
@@ -53,6 +50,28 @@ public class StatementPrinter {
         );
 
         return result.toString();
+    }
+
+    /**
+     * Returns total volume credits for the invoice.
+     */
+    private int getTotalVolumeCredits() {
+        int result = 0;
+        for (Performance performance : invoice.getPerformances()) {
+            result += getVolumeCredits(performance);
+        }
+        return result;
+    }
+
+    /**
+     * Returns total amount for the invoice (in cents).
+     */
+    private int getTotalAmount() {
+        int result = 0;
+        for (Performance performance : invoice.getPerformances()) {
+            result += getAmount(performance);
+        }
+        return result;
     }
 
     private int getVolumeCredits(Performance performance) {
@@ -105,12 +124,6 @@ public class StatementPrinter {
         return result;
     }
 
-    /**
-     * Format an amount in cents to US currency string (e.g., $123.45).
-     *
-     * @param amountInCents amount in cents
-     * @return string with US currency formatting
-     */
     private String usd(int amountInCents) {
         NumberFormat nf = NumberFormat.getCurrencyInstance(Locale.US);
         return nf.format((double) amountInCents / Constants.PERCENT_FACTOR);
