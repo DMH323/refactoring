@@ -71,6 +71,18 @@ public class StatementPrinter {
         return result.toString();
     }
 
+    private static int getVolumeCredits(Performance performance, int volumeCredits, Play play) {
+        // add volume credits
+        volumeCredits += Math.max(
+                performance.audience - Constants.BASE_VOLUME_CREDIT_THRESHOLD, 0);
+
+        // add extra credit for every five comedy attendees
+        if ("comedy".equals(play.type)) {
+            volumeCredits += performance.audience
+                    / Constants.COMEDY_EXTRA_VOLUME_FACTOR;
+        }
+        return volumeCredits;
+    }
 
     /**
      * Helper to retrieve the play object for a performance.
