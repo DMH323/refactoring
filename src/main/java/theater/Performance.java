@@ -5,25 +5,16 @@ package theater;
  */
 public class Performance {
 
-    /** The ID of the play being performed. */
-    public final String playID;
+    private final String playID;
+    private final int audience;
 
-    /** Number of audience members. */
-    public final int audience;
-
-    /**
-     * Constructs a Performance with the specified play ID and audience size.
-     *
-     * @param playID   the identifier for the play
-     * @param audience the audience count for this performance
-     */
     public Performance(String playID, int audience) {
         this.playID = playID;
         this.audience = audience;
     }
 
     /**
-     * Returns the play ID.
+     * Returns the play ID associated with this performance.
      *
      * @return the play ID
      */
@@ -32,9 +23,9 @@ public class Performance {
     }
 
     /**
-     * Returns the audience count.
+     * Returns the number of audience members for this performance.
      *
-     * @return the audience size
+     * @return audience count
      */
     public int getAudience() {
         return audience;

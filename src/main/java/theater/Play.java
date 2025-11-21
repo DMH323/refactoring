@@ -1,22 +1,13 @@
 package theater;
 
 /**
- * Represents a play with a name and type.
+ * Class representing a play.
  */
 public class Play {
 
-    /** The name of the play. */
-    public final String name;
+    private final String name;
+    private final String type;
 
-    /** The type of the play (e.g., comedy, tragedy). */
-    public final String type;
-
-    /**
-     * Constructs a Play with the given name and type.
-     *
-     * @param name the name of the play
-     * @param type the type of the play
-     */
     public Play(String name, String type) {
         this.name = name;
         this.type = type;
@@ -32,7 +23,7 @@ public class Play {
     }
 
     /**
-     * Returns the type of the play.
+     * Returns the type of the play (e.g., tragedy, comedy).
      *
      * @return the play type
      */
