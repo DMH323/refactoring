@@ -6,10 +6,10 @@ package theater;
 public class Performance {
 
     /** The ID of the play being performed. */
-    private final String playID;
+    public final String playID;
 
     /** Number of audience members. */
-    private final int audience;
+    public final int audience;
 
     /**
      * Constructs a Performance with the specified play ID and audience size.
